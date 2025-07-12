@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Анализ рисков спецификации (Mouser)</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 2em; background-color: #f9f9f9; }
+        h1, h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { border-collapse: collapse; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background-color: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .risk-low { background-color: #e8f5e9; }
+        .risk-medium { background-color: #fff3e0; }
+        .risk-high { background-color: #ffebee; }
+        .risk-critical { background-color: #ffcdd2; font-weight: bold; }
+        .risk-not-found { background-color: #eceff1; color: #607d8b; }
+        .part-number { font-family: "Courier New", Courier, monospace; font-weight: bold; }
+        .summary { padding: 15px; background-color: #e3f2fd; border-left: 5px solid #2196f3; margin-bottom: 20px; }
+
+        /* Стили для блока с заменами */
+        .replacement-box {
+            background-color: #fafafa;
+            border-top: 2px solid #e0e0e0;
+            padding: 15px;
+            margin-top: -1px; /* Чтобы перекрыть нижнюю границу ячейки */
+        }
+        .replacement-box h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1a237e;
+            font-size: 1.1em;
+        }
+        .replacement-item {
+            font-size: 0.9em;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        .replacement-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .replacement-item b {
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Анализ рисков спецификации (BOM)</h1>
+    <p>Источник данных: <strong>Mouser API</strong></p>
+    <div class="summary">
+        <h2>Сводка по рискам</h2>
+        <ul>
+            {% for level, count in summary.items() %}
+                {% if count > 0 %}
+                    <li><strong>{{ level }}:</strong> {{ count }} поз.</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+
+    <h2>Детальный анализ</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:15%;">Оценка риска</th>
+                <th style="width:20%;">Part Number</th>
+                <th>Описание (BOM) / Производитель</th>
+                <th style="width:12%;">Наличие (шт)</th>
+                <th style="width:15%;">Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in components %}
+            <tr class="{{ item.risk_class }}">
+                <td><b>{{ item.risk_level }}</b></td>
+                <td class="part-number">{{ item.PartNumber }}</td>
+                <td>{{ item.Description }}<br><small style="color:gray;">{{ item.manufacturer }}</small></td>
+                <td>{{ item.stock }}</td>
+                <td>{{ item.lifecycle_status }}</td>
+            </tr>
+
+            {% if item.replacements %}
+            <tr>
+                <td colspan="5" style="padding: 0; border: 0;">
+                    <div class="replacement-box">
+                        <h4>💡 Предложенные замены:</h4>
+                        {% for rep in item.replacements %}
+                        <div class="replacement-item">
+                            <b>{{ rep.part_number }}</b> ({{ rep.manufacturer }})<br>
+                            <i>{{ rep.description }}</i><br>
+                            <span style="color: green; font-weight: bold;">В наличии: {{ rep.stock }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="text-align:center; color: #aaa; margin-top: 20px;">Отчет сгенерирован: {{ report_date }}</p>
+</body>
+</html>
